@@ -149,7 +149,94 @@
       <div class="wrap">
         <h2 id="projects-title">Projects</h2>
 
-        <article class="project">
+        <article class="project" id="cctv">
+          <header class="project-head">
+            <h3>CCTV Monitoring System</h3>
+            <p class="entry-meta">Unreal Engine 5.8 · Blueprint · solo project · <time datetime="2026-11">Nov 2026</time></p>
+            <ul class="tags" aria-label="Built with">
+              <li>Unreal Engine 5.8</li>
+              <li>Blueprints</li>
+              <li>Enhanced Input</li>
+              <li>Materials</li>
+              <li>UMG</li>
+            </ul>
+          </header>
+          <p>
+            A security-monitor system for a first-person horror game. The player sits at a CCTV desk, cycles
+            through live camera feeds, and finds broken cameras showing static. They walk out, repair them, and
+            the feed comes back live, even before they sit back down.
+          </p>
+
+          <div class="clips">
+            <figure>
+              <div class="clip clip-16x10">
+                <iframe src="https://www.youtube-nocookie.com/embed/1eEDGVNdEV4?rel=0"
+                        title="CCTV Monitoring System: one-minute demo"
+                        loading="lazy"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        allowfullscreen></iframe>
+              </div>
+              <figcaption><strong>One-minute demo.</strong> Switching feeds, finding the broken camera, and repairing it.</figcaption>
+            </figure>
+          </div>
+
+          <h4>What I built</h4>
+          <ul>
+            <li><strong>Live camera feeds:</strong> four security cameras render into one shared render target through Scene Capture components. Only the active camera renders, and broken cameras skip rendering entirely, since their feed is hidden behind static anyway.</li>
+            <li><strong>Desk interaction:</strong> a line-trace interaction system built on a Blueprint Interface. Sitting blends the view to the monitor and swaps Enhanced Input mapping contexts, so walking and looking are disabled and the CCTV controls are enabled. Standing reverses it.</li>
+            <li><strong>Camera switching:</strong> cycles through the cameras in both directions with wrap-around, all through one <code>SwitchToCamera</code> function that is the single source of truth for what's on screen.</li>
+            <li><strong>Broken feeds:</strong> an animated static shader (noise driven by time, blended with the live feed through a Lerp) controlled at runtime with a Dynamic Material Instance, plus a NO SIGNAL warning.</li>
+            <li><strong>Repairs:</strong> each camera announces its repair through an Event Dispatcher. The desk subscribes to every camera at startup and refreshes the screen the moment one is fixed.</li>
+            <li><strong>Overlay and audio:</strong> a world-space UMG overlay on the monitor with the camera name, a live clock and a REC indicator, plus a click when switching and 3D static hiss that fades with distance.</li>
+          </ul>
+
+          <h4>Problems I solved</h4>
+          <ul>
+            <li><strong>All cameras rendering at once on startup.</strong> Plugging an array into a function's Target pin runs that function on every element. I fixed it by having the desk switch every camera off first, then turn on exactly one.</li>
+            <li><strong>The desk ignoring input.</strong> Actors other than the player only receive input after Enable Input, and the Enhanced Input subsystem needs an explicit Player Controller outside the pawn.</li>
+            <li><strong>Switching backwards broke at camera 0.</strong> <code>%</code> can return negative numbers, so I used <code>(i − 1 + n) % n</code>.</li>
+            <li><strong>The player could still look around while seated.</strong> The template keeps mouse-look in its own mapping context, so both contexts have to be swapped.</li>
+          </ul>
+
+          <h4>How I built it</h4>
+          <p>
+            Built from scratch in Blueprint over about three days, using version control with a commit at each
+            milestone. <strong>Next:</strong> bringing this system into <a href="#second-chance">Second Chance</a>,
+            where the CCTV room is the antagonist's base.
+          </p>
+
+          <h4>Blueprint graphs</h4>
+          <p class="hint">Select a graph to see it full size.</p>
+          <div class="graphs">
+            <figure class="wide">
+              <a href="assets/cctv/switch-to-camera.webp"><img src="assets/cctv/switch-to-camera.webp" width="1194" height="234" loading="lazy" alt="SwitchToCamera Blueprint graph: turns the old camera off, stores the new index, turns the new camera on if it isn't broken, then updates the static amount, NO SIGNAL warning, overlay name and audio volume."></a>
+              <figcaption><strong>SwitchToCamera.</strong> Old camera off, new camera on only if it works, then the static, NO SIGNAL warning, overlay and hiss update together.</figcaption>
+            </figure>
+            <figure class="wide">
+              <a href="assets/cctv/begin-play.webp"><img src="assets/cctv/begin-play.webp" width="1029" height="251" loading="lazy" alt="Event BeginPlay Blueprint graph: creates the dynamic material, finds every security camera, binds to each camera's On Repaired event, switches each one off, then switches to camera 0."></a>
+              <figcaption><strong>Startup.</strong> The desk finds every camera, subscribes to its repair event and switches it off, then turns on camera 0.</figcaption>
+            </figure>
+            <figure>
+              <a href="assets/cctv/interact-exit.webp"><img src="assets/cctv/interact-exit.webp" width="1100" height="623" loading="lazy" alt="Interact and CCTV Exit Blueprint graphs: blend the view to or from the desk and swap the default and mouse-look mapping contexts with the CCTV one."></a>
+              <figcaption><strong>Sitting and standing.</strong> View blend plus the mapping context swap, in both directions.</figcaption>
+            </figure>
+            <figure>
+              <a href="assets/cctv/camera-cycling.webp"><img src="assets/cctv/camera-cycling.webp" width="1012" height="672" loading="lazy" alt="Switching CCTV Screens Blueprint graph: next and previous input actions calculate a wrapped index and call SwitchToCamera, then play a click."></a>
+              <figcaption><strong>Next and previous.</strong> Wrapped index, then one call to SwitchToCamera.</figcaption>
+            </figure>
+            <figure>
+              <a href="assets/cctv/static-material.webp"><img src="assets/cctv/static-material.webp" width="1098" height="815" loading="lazy" alt="M_CCTVScreen material graph: time-driven noise blended with the camera texture through a Lerp, with a StaticAmount parameter as alpha, into Emissive Color."></a>
+              <figcaption><strong>Static material.</strong> Time-driven noise blended over the live feed by <code>StaticAmount</code>.</figcaption>
+            </figure>
+            <figure>
+              <a href="assets/cctv/set-camera.webp"><img src="assets/cctv/set-camera.webp" width="771" height="268" loading="lazy" alt="Set_Camera Blueprint function: sets Is Active and the Scene Capture's Capture Every Frame to the same value."></a>
+              <figcaption><strong>Set_Camera.</strong> Turning a camera off stops its Scene Capture from rendering.</figcaption>
+            </figure>
+          </div>
+        </article>
+
+        <article class="project" id="second-chance">
           <header class="project-head">
             <h3>Second Chance</h3>
             <p class="entry-meta">Unreal Engine 5 game prototype · personal project · <time datetime="2026-07">Jul 2026</time> – Present</p>
